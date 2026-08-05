@@ -13,8 +13,11 @@ import java.util.Optional;
 @Service
 public class HospitalService {
 
-    @Autowired
-    private HospitalRepository hospitalRepository;
+    private final HospitalRepository hospitalRepository;
+
+    public HospitalService(HospitalRepository hospitalRepository) {
+        this.hospitalRepository = hospitalRepository;
+    }
 
     public Optional<HospitalResponseDTO> create(HospitalRequestDTO dto) {
        Hospital hospital = new Hospital();

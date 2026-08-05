@@ -7,6 +7,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import teste.hospital.enums.RoomStatus;
 
+import java.util.List;
+
 @Entity
 @Table(name = "room")
 @Setter
@@ -23,4 +25,6 @@ public class Room {
     @ManyToOne
     @JoinColumn(name = "ward_id")
     private Ward ward;
+    @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
+    private List<Bed> beds;
 }

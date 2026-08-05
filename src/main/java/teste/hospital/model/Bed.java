@@ -18,7 +18,7 @@ public class Bed {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private int bed_number;
+    private int bedNumber;
     @Enumerated(EnumType.STRING)
     private BedStatus status;
     @ManyToOne

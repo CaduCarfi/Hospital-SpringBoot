@@ -14,10 +14,13 @@ import java.util.Optional;
 @Service
 public class PatientService {
 
-    @Autowired
-    private PatientRepository patientRepository;
-    @Autowired
-    private HospitalRepository hospitalRepository;
+    private final PatientRepository patientRepository;
+    private final HospitalRepository hospitalRepository;
+
+    public PatientService(PatientRepository patientRepository, HospitalRepository hospitalRepository) {
+        this.patientRepository = patientRepository;
+        this.hospitalRepository = hospitalRepository;
+    }
 
     public Optional<PatientResponseDTO> creat(PatientRequestDTO dto) {
         Patient patient = new Patient();
