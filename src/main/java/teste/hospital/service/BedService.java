@@ -1,10 +1,8 @@
 package teste.hospital.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import teste.hospital.dto.bed.BedRequestDTO;
 import teste.hospital.dto.bed.BedResponseDTO;
-import teste.hospital.dto.room.RoomResponseDTO;
 import teste.hospital.enums.BedStatus;
 import teste.hospital.model.Bed;
 import teste.hospital.model.Room;
@@ -34,7 +32,7 @@ public class BedService {
         bed.setStatus(BedStatus.UNOCCUPIED);
 
         long quantidadeAtual = bedRepository.countByRoom(room);
-        bed.setBed_number((int) quantidadeAtual + 1);
+        bed.setBedNumber((int) quantidadeAtual + 1);
 
         Bed saved = bedRepository.save(bed);
         return toResponseDTO(saved);
@@ -69,7 +67,7 @@ public class BedService {
         Bed bed = bedRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Bed não encontrada"));
 
-        if (!bed.getStatus() == BedStatus.OCCUPIED) {
+        if (bed.getStatus() == BedStatus.OCCUPIED) {
             throw new RuntimeException("Não é possivel excluir leito ocupado");
         }
         bedRepository.deleteById(id);
