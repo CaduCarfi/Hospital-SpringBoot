@@ -1,6 +1,5 @@
 package teste.hospital.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import teste.hospital.dto.patient.PatientRequestDTO;
 import teste.hospital.dto.patient.PatientResponseDTO;
@@ -15,14 +14,12 @@ import java.util.Optional;
 public class PatientService {
 
     private final PatientRepository patientRepository;
-    private final HospitalRepository hospitalRepository;
 
-    public PatientService(PatientRepository patientRepository, HospitalRepository hospitalRepository) {
+    public PatientService(PatientRepository patientRepository) {
         this.patientRepository = patientRepository;
-        this.hospitalRepository = hospitalRepository;
     }
 
-    public Optional<PatientResponseDTO> creat(PatientRequestDTO dto) {
+    public PatientResponseDTO create(PatientRequestDTO dto) {
         Patient patient = new Patient();
         patient.setName(dto.getName());
         patient.setCpf(dto.getCpf());
@@ -33,23 +30,29 @@ public class PatientService {
         return toResponseDTO(saved);
     }
 
-    public List<Optional<PatientResponseDTO>> findAll() {
+    public PatientResponseDTO findById(Long id) {
+        Patient patient = patientRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Passiente não existe"));
+        return toResponseDTO(patient);
+    }
+
+    public List<PatientResponseDTO> findAll() {
         return patientRepository.findAll()
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
     }
 
-    public Optional<PatientResponseDTO> toResponseDTO(Patient patient) {
-        return Optional.of(new PatientResponseDTO(
+    public PatientResponseDTO toResponseDTO(Patient patient) {
+        return new PatientResponseDTO(
                 patient.getId(),
-                patient.getCpf(),
                 patient.getName(),
+                patient.getCpf(),
                 patient.getPhone()
-        ));
+        );
     }
 
-    public Optional<PatientResponseDTO> update(Long id, PatientRequestDTO dto) {
+    public PatientResponseDTO update(Long id, PatientRequestDTO dto) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Patient não encontrado"));
 
