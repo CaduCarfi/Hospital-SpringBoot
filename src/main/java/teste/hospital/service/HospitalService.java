@@ -1,25 +1,26 @@
 package teste.hospital.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import teste.hospital.dto.hospital.HospitalRequestDTO;
 import teste.hospital.dto.hospital.HospitalResponseDTO;
 import teste.hospital.model.Hospital;
 import teste.hospital.repository.HospitalRepository;
+import teste.hospital.repository.PatientRepository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class HospitalService {
 
     private final HospitalRepository hospitalRepository;
+    private final PatientRepository patientRepository;
 
-    public HospitalService(HospitalRepository hospitalRepository) {
+    public HospitalService(HospitalRepository hospitalRepository, PatientRepository patientRepository) {
         this.hospitalRepository = hospitalRepository;
+        this.patientRepository = patientRepository;
     }
 
-    public Optional<HospitalResponseDTO> create(HospitalRequestDTO dto) {
+    public HospitalResponseDTO create(HospitalRequestDTO dto) {
        Hospital hospital = new Hospital();
        hospital.setName(dto.getName());
        hospital.setPhone(dto.getPhone());
@@ -30,23 +31,29 @@ public class HospitalService {
        return toResponseDTO(saved);
     }
 
-    public List<Optional<HospitalResponseDTO>> findAll() {
+    public HospitalResponseDTO findById(Long id) {
+        Hospital hospital = hospitalRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Hospital não existe"));
+        return toResponseDTO(hospital);
+    }
+
+    public List<HospitalResponseDTO> findAll() {
         return hospitalRepository.findAll()
                 .stream()
                 .map(this::toResponseDTO)
                 .toList();
     }
 
-    public Optional<HospitalResponseDTO> toResponseDTO(Hospital hospital) {
-        return Optional.of(new HospitalResponseDTO(
+    public HospitalResponseDTO toResponseDTO(Hospital hospital) {
+        return new HospitalResponseDTO(
                 hospital.getId(),
                 hospital.getName(),
                 hospital.getPhone(),
                 hospital.getCnpj()
-        ));
+        );
     }
 
-    public Optional<HospitalResponseDTO> update(Long id, HospitalRequestDTO dto) {
+    public HospitalResponseDTO update(Long id, HospitalRequestDTO dto) {
         Hospital hospital = hospitalRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Hospital não encontrado"));
 
