@@ -20,7 +20,7 @@ public class Room {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String room_code;
+    private String roomCode;
     private RoomStatus status;
     @ManyToOne
     @JoinColumn(name = "ward_id")

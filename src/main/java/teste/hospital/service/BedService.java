@@ -81,4 +81,11 @@ public class BedService {
                 bed.getRoom().getId()
         );
     }
+
+    public List<BedResponseDTO> findAvailableBedsBySpecialty(String specialty) {
+        List<Bed> beds = bedRepository.findByRoom_Ward_SpecialtyAndStatus(specialty, BedStatus.UNOCCUPIED);
+        return beds.stream()
+                .map(this::toResponseDTO)
+                .toList();
+    }
 }

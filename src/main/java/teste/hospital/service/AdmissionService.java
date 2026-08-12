@@ -1,19 +1,25 @@
 package teste.hospital.service;
 
-import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.stereotype.Service;
-import teste.hospital.dto.admission.AdmissionRequestDTO;
-import teste.hospital.dto.admission.AdmissionResponseDTO;
+import teste.hospital.dto.admission.*;
+import teste.hospital.dto.room.RoomResponseDTO;
 import teste.hospital.enums.AdmissionStatus;
 import teste.hospital.enums.BedStatus;
 import teste.hospital.model.AdmissionLog;
 import teste.hospital.model.Bed;
 import teste.hospital.model.Patient;
+import teste.hospital.model.Room;
 import teste.hospital.repository.AdmissionLogRepository;
 import teste.hospital.repository.BedRepository;
 import teste.hospital.repository.PatientRepository;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class AdmissionService {
@@ -69,7 +75,7 @@ public class AdmissionService {
         admissionLogRepository.save(admissionLog);
 
         Bed bed = admissionLog.getBed();
-        bed.setStatus(BedStatus.UNOCCUPIED);
+        bed.setStatus(BedStatus.IN_PREPARATION);
         bedRepository.save(bed);
 
         return toResponseDTO(admissionLog);
@@ -84,5 +90,73 @@ public class AdmissionService {
                 log.getAdmissionAt(),
                 log.getDischargeAt()
         );
+    }
+
+    public RoomResponseDTO findRoomByPatient(Long patientId) {
+        AdmissionLog admissionLog = admissionLogRepository.findByPatient_IdAndStatus(patientId, AdmissionStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("Paciente não está internado"));
+
+        Room room = admissionLog.getBed().getRoom();
+
+        return new RoomResponseDTO(
+                room.getId(),
+                room.getRoomCode(),
+                room.getStatus().name(),
+                room.getWard().getId()
+        );
+    }
+
+    public CurrentAdmissionDTO currentAdmissionDTO(Long patientId) {
+        AdmissionLog admissionLog = admissionLogRepository.findByPatient_IdAndStatus(patientId, AdmissionStatus.ACTIVE)
+                .orElseThrow(() -> new RuntimeException("Paciente não está internado"));
+
+        Room room = admissionLog.getBed().getRoom();
+
+        return new CurrentAdmissionDTO(
+                room.getWard().getHospital().getName(),
+                room.getWard().getSpecialty(),
+                room.getRoomCode(),
+                admissionLog.getPatient().getName(),
+                admissionLog.getAdmissionAt()
+        );
+    }
+
+    public Page<HistoricAdmissionDTO> findAdmissionHistory(Long patientId, Pageable pageable) {
+        Page<AdmissionLog> admissionLogs = admissionLogRepository.findByPatient_Id(patientId, pageable);
+
+        return admissionLogs.map(log -> new HistoricAdmissionDTO(
+              log.getPatient().getName(),
+              log.getBed().getRoom().getWard().getSpecialty(),
+              log.getAdmissionAt(),
+              log.getDischargeAt()
+        ));
+    }
+
+    public List<ActivePatientDTO> findActivePatientsGrouped() {
+        List<AdmissionLog> activeLogs = admissionLogRepository.findByStatus(AdmissionStatus.ACTIVE);
+
+        return activeLogs.stream()
+                .map(log -> new ActivePatientDTO(
+                        log.getPatient().getName(),
+                        log.getBed().getRoom().getWard().getSpecialty(),
+                        log.getAdmissionAt(),
+                        ChronoUnit.DAYS.between(log.getAdmissionAt(), LocalDateTime.now())
+                ))
+                .sorted(Comparator.comparing(ActivePatientDTO::getSpecialty)
+                        .thenComparing(ActivePatientDTO::getPatientName))
+                .toList();
+    }
+
+    public List<BedHistoryDTO> findBedHistory(Long bedId) {
+        List<AdmissionLog> logs = admissionLogRepository.findByBed_Id(bedId);
+
+        return logs.stream()
+                .map(log -> new BedHistoryDTO(
+                        log.getBed().getBedNumber(),
+                        log.getPatient().getName(),
+                        log.getAdmissionAt(),
+                        log.getDischargeAt()
+                ))
+                .toList();
     }
 }

@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity
 @Table(name = "ward")
 @Setter
@@ -21,4 +23,6 @@ public class Ward {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "hospital_id")
     private Hospital hospital;
+    @OneToMany(mappedBy = "ward", cascade = CascadeType.ALL)
+    private List<Room> rooms;
 }

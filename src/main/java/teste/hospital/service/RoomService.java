@@ -1,9 +1,11 @@
 package teste.hospital.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import teste.hospital.dto.room.RoomAvailabilityDTO;
+import teste.hospital.dto.room.RoomQuantityDTO;
 import teste.hospital.dto.room.RoomRequestDTO;
 import teste.hospital.dto.room.RoomResponseDTO;
+import teste.hospital.enums.BedStatus;
 import teste.hospital.enums.RoomStatus;
 import teste.hospital.model.Room;
 import teste.hospital.model.Ward;
@@ -11,8 +13,9 @@ import teste.hospital.repository.RoomRepository;
 import teste.hospital.repository.WardRepository;
 
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RoomService {
@@ -25,7 +28,7 @@ public class RoomService {
         this.wardRepository = wardRepository;
     }
 
-    public Optional<RoomResponseDTO> create(RoomRequestDTO dto) {
+    public RoomResponseDTO create(RoomRequestDTO dto) {
         Ward ward = wardRepository.findById(dto.getWardId())
                 .orElseThrow(() -> new RuntimeException("Ward não encontrada"));
 
@@ -35,7 +38,7 @@ public class RoomService {
 
         long quantidadeAtual = roomRepository.countByWard(ward);
         String prefixo = ward.getSpecialty().substring(0, 4).toUpperCase();
-        room.setRoom_code(prefixo + "-" + (quantidadeAtual + 1));
+        room.setRoomCode(prefixo + "-" + (quantidadeAtual + 1));
 
         Room saved = roomRepository.save(room);
         return toResponseDTO(saved);
@@ -57,7 +60,7 @@ public class RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Room não encontrado"));
 
-        Ward ward = wardRepository.findById(id)
+        Ward ward = wardRepository.findById(dto.getWardId())
                 .orElseThrow(() -> new RuntimeException("Ward não encontrado"));
 
         room.setWard(ward);
@@ -79,9 +82,40 @@ public class RoomService {
     private RoomResponseDTO toResponseDTO(Room room) {
         return new RoomResponseDTO(
                 room.getId(),
-                room.getRoom_code(),
+                room.getRoomCode(),
                 room.getStatus().name(),
                 room.getWard().getId()
         );
+    }
+
+    public List<RoomAvailabilityDTO> findAvailableRooms() {
+        return roomRepository.findAll()
+                .stream()
+                .filter(room -> room.getBeds().stream()
+                        .anyMatch(bed -> bed.getStatus() == BedStatus.UNOCCUPIED))
+                .map(room -> new RoomAvailabilityDTO(room.getRoomCode(), room.getWard().getSpecialty()))
+                .toList();
+    }
+
+    public List<RoomQuantityDTO> countRoomsBySpecialty() {
+        Map<String, List<Room>> roomsBySpecialty = roomRepository.findAll()
+                .stream()
+                .collect(Collectors.groupingBy(room -> room.getWard().getSpecialty()));
+
+        return roomsBySpecialty.entrySet()
+                .stream()
+                .map(entry -> {
+                    String specialty = entry.getKey();
+                    List<Room> rooms = entry.getValue();
+
+                    int total = rooms.size();
+                    int free = (int) rooms.stream()
+                            .filter(room -> room.getStatus() == RoomStatus.FREE)
+                            .count();
+                    int occupied = total - free;
+
+                    return new RoomQuantityDTO(specialty, occupied, free, total);
+                })
+                .toList();
     }
 }
