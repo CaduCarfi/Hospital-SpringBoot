@@ -51,9 +51,10 @@ public class RoomService {
                 .toList();
     }
 
-    public Optional<RoomResponseDTO> findById(Long id) {
-        return roomRepository.findById(id)
-                .map(this::toResponseDTO);
+    public RoomResponseDTO findById(Long id) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room não existe"));
+        return toResponseDTO(room);
     }
 
     public RoomResponseDTO update(Long id, RoomRequestDTO dto) {
