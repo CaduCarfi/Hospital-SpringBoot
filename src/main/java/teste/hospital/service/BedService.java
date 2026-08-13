@@ -45,9 +45,10 @@ public class BedService {
                 .toList();
     }
 
-    public Optional<BedResponseDTO> findById(Long id) {
-        return bedRepository.findById(id)
-                .map(this::toResponseDTO);
+    public BedResponseDTO findById(Long id) {
+        Bed bed = bedRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Bed não existe"));
+        return toResponseDTO(bed);
     }
 
     public BedResponseDTO update(Long id, BedRequestDTO dto) {
