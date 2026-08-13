@@ -3,9 +3,9 @@ package teste.hospital.service;
 import org.springframework.stereotype.Service;
 import teste.hospital.dto.hospital.HospitalRequestDTO;
 import teste.hospital.dto.hospital.HospitalResponseDTO;
+import teste.hospital.dto.ward.WardRequestDTO;
 import teste.hospital.model.Hospital;
 import teste.hospital.repository.HospitalRepository;
-import teste.hospital.repository.PatientRepository;
 
 import java.util.List;
 
@@ -13,22 +13,28 @@ import java.util.List;
 public class HospitalService {
 
     private final HospitalRepository hospitalRepository;
-    private final PatientRepository patientRepository;
+    private final WardService wardService;
 
-    public HospitalService(HospitalRepository hospitalRepository, PatientRepository patientRepository) {
+    public HospitalService(HospitalRepository hospitalRepository, WardService wardService) {
         this.hospitalRepository = hospitalRepository;
-        this.patientRepository = patientRepository;
+        this.wardService = wardService;
     }
 
     public HospitalResponseDTO create(HospitalRequestDTO dto) {
-       Hospital hospital = new Hospital();
-       hospital.setName(dto.getName());
-       hospital.setPhone(dto.getPhone());
-       hospital.setCnpj(dto.getCnpj());
+        Hospital hospital = new Hospital();
+        hospital.setName(dto.getName());
+        hospital.setPhone(dto.getPhone());
+        hospital.setCnpj(dto.getCnpj());
+        Hospital saved = hospitalRepository.save(hospital);
 
-       Hospital saved = hospitalRepository.save(hospital);
+        if (dto.getWards() != null) {
+            for (WardRequestDTO wardDto : dto.getWards()) {
+                wardDto.setHospitalId(saved.getId());
+                wardService.create(wardDto);
+            }
+        }
 
-       return toResponseDTO(saved);
+        return toResponseDTO(saved);
     }
 
     public HospitalResponseDTO findById(Long id) {
