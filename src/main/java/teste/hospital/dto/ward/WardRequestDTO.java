@@ -15,6 +15,5 @@ public class WardRequestDTO {
     private String specialty;
     private Integer roomCount;
     private Integer bedsPerRoom;
-    @NotNull
     private Long hospitalId;
 }

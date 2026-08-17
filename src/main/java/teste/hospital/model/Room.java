@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import teste.hospital.enums.RoomStatus;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -26,5 +27,5 @@ public class Room {
     @JoinColumn(name = "ward_id")
     private Ward ward;
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL)
-    private List<Bed> beds;
+    private List<Bed> beds = new ArrayList<>();
 }

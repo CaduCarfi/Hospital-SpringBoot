@@ -79,9 +79,10 @@ public class WardService {
                 .toList();
     }
 
-    public Optional<WardResponseDTO> findById(Long id) {
-        return wardRepository.findById(id)
-                .map(this::toResponseDTO);
+    public WardResponseDTO findById(Long id) {
+        Ward ward = wardRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ward não existe"));
+        return toResponseDTO(ward);
     }
 
     public WardResponseDTO update(Long id, WardRequestDTO dto) {
